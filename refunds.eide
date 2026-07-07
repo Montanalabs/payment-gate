@@ -1,0 +1,15 @@
+#! refunds slice — a self-contained trust boundary for the refund capability. The closed type, the
+#! extract boundary, and the attenuated irreversible sink all live here, so this feature's
+#! whole taint -> trust -> effect story is one file. Privilege is centralized in
+#! capabilities.eide and attenuated here to just refund via using (least authority).
+#! @taint bridge — extract<RefundDecision> turns the tainted body into a trusted command
+import capabilities
+
+type RefundTier = Partial | Full
+type RefundDecision = Refund(RefundTier) | Reject
+
+fn refundHandle() {
+  let body = fetch<web>  # UNTRUSTED body — tainted
+  quarantined { let decision = extract<RefundDecision>(body) confidence 80 }
+  using refund { commit { refund(decision) } }  # attenuated to refund; irreversible
+}

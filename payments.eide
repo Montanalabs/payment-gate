@@ -1,0 +1,15 @@
+#! payments slice — a self-contained trust boundary for the settle capability. The closed type, the
+#! extract boundary, and the attenuated irreversible sink all live here, so this feature's
+#! whole taint -> trust -> effect story is one file. Privilege is centralized in
+#! capabilities.eide and attenuated here to just settle via using (least authority).
+#! @taint bridge — extract<PayDecision> turns the tainted body into a trusted command
+import capabilities
+
+type PayTier = Small | Medium | Large
+type PayDecision = Approve(PayTier) | Review | Deny
+
+fn payHandle() {
+  let body = fetch<web>  # UNTRUSTED body — tainted
+  quarantined { let decision = extract<PayDecision>(body) confidence 80 }
+  using settle { commit { settle(decision) } }  # attenuated to settle; irreversible
+}
